@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.0.2)
-project(roboticsProjectOne)
+project(robotics_project_one)
 
 
 find_package(catkin REQUIRED COMPONENTS
@@ -9,18 +9,11 @@ find_package(catkin REQUIRED COMPONENTS
 )
 
 
-catkin_package(
-#  INCLUDE_DIRS include
-#  LIBRARIES roboticsProjectOne
-#  CATKIN_DEPENDS roscpp rospy std_msgs
-#  DEPENDS system_lib
-)
+catkin_package()
 
-add_executable(odometryNode src/odom.cpp)
+include_directories(include ${catkin_INCLUDE_DIRS})
 
-target_link_libraries(odometryNode ${catkin_LIBRARIES})
+add_executable(odom src/odom.cpp)
+target_link_libraries(odom ${catkin_LIBRARIES})
 
-include_directories(
-# include
-  ${catkin_INCLUDE_DIRS}
-)
+
