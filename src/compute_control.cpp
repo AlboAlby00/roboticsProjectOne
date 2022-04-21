@@ -8,7 +8,7 @@ class ComputeControl{
         ros::NodeHandle n;
         ros::Subscriber sub_cmd_vel;
         ros::Publisher pub_wheels_rpm;
-        double r,l_x,l_y,T,N;   //parameters that will be retrieved from the parameter server
+        double r,l_x,l_y,T;   //parameters that will be retrieved from the parameter server
 
     public:
         ComputeControl(){
@@ -21,24 +21,23 @@ class ComputeControl{
             n.getParam("/lx",l_x);
             n.getParam("/ly",l_y);
             n.getParam("/T",T);
-            n.getParam("/N",N);
         }
 
 
-    void callback(const geometry_msgs::TwistStamped::ConstPtr& msg) {
-        robotics_project_one::WheelSpeeds response;
+        void callback(const geometry_msgs::TwistStamped::ConstPtr& msg) {
+            robotics_project_one::WheelSpeeds response;
 
-        double v_x = msg->twist.linear.x;
-        double v_y = msg->twist.linear.y;
-        double w = msg->twist.angular.z;
+            double v_x = msg->twist.linear.x;
+            double v_y = msg->twist.linear.y;
+            double w = msg->twist.angular.z;
 
-        response.rpm_fl = 60*T*(v_x-v_y-(l_x+l_y)*w)/r;
-        response.rpm_fr = 60*T*(v_x+v_y+(l_x+l_y)*w)/r;
-        response.rpm_rl = 60*T*(v_x+v_y-(l_x+l_y)*w)/r;
-        response.rpm_rr = 60*T*(v_x-v_y+(l_x+l_y)*w)/r;
+            response.rpm_fl = 60*T*(v_x-v_y-(l_x+l_y)*w)/r;
+            response.rpm_fr = 60*T*(v_x+v_y+(l_x+l_y)*w)/r;
+            response.rpm_rl = 60*T*(v_x+v_y-(l_x+l_y)*w)/r;
+            response.rpm_rr = 60*T*(v_x-v_y+(l_x+l_y)*w)/r;
 
-        pub_wheels_rpm.publish(response);
-    }
+            pub_wheels_rpm.publish(response);
+        }
 
 };
 
