@@ -14,6 +14,11 @@ add_message_files(
   WheelSpeeds.msg
 )
 
+add_service_files(
+  FILES
+  Reset_odometry.srv
+)
+
 generate_messages(
   DEPENDENCIES
   std_msgs
