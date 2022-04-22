@@ -9,4 +9,8 @@
     <param name="T" type="double" value="5.0" />
     <param name="N" type="double" value="42" />
 
+    <param name="x0" type="double" value="10" />
+    <param name="y0" type="double" value="10" />
+    <param name="theta0" type="double" value="3.14" />
+
 </launch>

@@ -6,18 +6,39 @@
 #include <nav_msgs/Odometry.h>
 #include <cmath>
 
+
+
+
+bool reset_odometry_callback(double *x,double *y,double *theta, robotics_project_one::Reset_odometry::Request  &req, 
+                    robotics_project_one::Reset_odometry::Response &res) {
+
+  *x = req.x;
+  *y = req.y;
+  *theta = req.theta;
+  ROS_INFO("Request to reset x to %f,y to %f,theta to %f",
+      req.x,req.y,req.theta);
+  return true;
+}
+
+
+
 //todo: subscribe to wheel_states topic and get ticks for the 4 wheels
 //      use the formulas to compute odometry and publish it
 //      broadcast TF from world frame to base frame (?)
-class Odom{
+class OdometryNode{
   private:
     ros::NodeHandle n;
     ros::Subscriber sub_wheel_states;
     ros::Publisher pub_cmd_vel;
     ros::Publisher pub_odom;
-    
+    ros::ServiceServer srv_reset_odometry;
+
+
     double r,l_x,l_y,T,N;   //parameters that will be retrieved from the parameter server
+
+    double x,y,theta; //initial position retreived from param server, then updated with odometry values
     
+
     bool firstMsg;
 
     double previous_ticks_fl;
@@ -28,13 +49,23 @@ class Odom{
     ros::Time previous_time;
 
     double v_x,v_y,w;
+
     
+    
+
   public:
-    Odom(){
+    OdometryNode(){
+
       pub_cmd_vel= n.advertise<geometry_msgs::TwistStamped>("cmd_vel", 1000);
       pub_odom = n.advertise<nav_msgs::Odometry>("odom",1000);
-      sub_wheel_states = n.subscribe("wheel_states", 1000, &Odom::callback, this);
-      
+      sub_wheel_states = n.subscribe("wheel_states", 1000, &OdometryNode::callback, this);
+
+      srv_reset_odometry =
+      n.advertiseService<robotics_project_one::Reset_odometry::Request, 
+                         robotics_project_one::Reset_odometry::Response>("reset_odometry", 
+          boost::bind(&reset_odometry_callback, &x,&y,&theta, _1, _2) 
+      );
+
       //retrieve robot parameters
       n.getParam("/r",r);
       n.getParam("/lx",l_x);
@@ -42,8 +73,17 @@ class Odom{
       n.getParam("/T",T);
       n.getParam("/N",N);
 
+      n.getParam("/x0",x);
+      n.getParam("/y0",y);
+      n.getParam("/theta0",theta);
+      
+
       firstMsg=true;
+
+
     }
+
+    
 
     void callback(const sensor_msgs::JointState& msg){
       double ticks_fl = msg.position[0];
@@ -102,16 +142,20 @@ class Odom{
       //todo:choose between euler and runge-kutta
     }
 
+  
+
 };
 
 
 int main(int argc, char **argv) {
 
   ros::init(argc, argv, "odometryNode");
-  
-  Odom odometry;
+
+  OdometryNode odometry;
 
   ros::spin();
 
   return 0;
 }
+
+
