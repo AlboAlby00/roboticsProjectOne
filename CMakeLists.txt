@@ -7,6 +7,8 @@ find_package(catkin REQUIRED COMPONENTS
   rospy
   std_msgs
   message_generation
+  tf2
+  tf2_ros
 )
 
 add_message_files(
@@ -36,5 +38,9 @@ target_link_libraries(compute_odometry ${catkin_LIBRARIES})
 add_executable(compute_control src/compute_control.cpp)
 add_dependencies(compute_control ${catkin_EXPORTED_TARGETS})
 target_link_libraries(compute_control ${catkin_LIBRARIES})
+
+add_executable(tf2_broad src/broadcaster_tf2.cpp)
+add_dependencies(tf2_broad ${catkin_EXPORTED_TARGETS})
+target_link_libraries(tf2_broad ${catkin_LIBRARIES})
 
 
