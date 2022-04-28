@@ -105,7 +105,7 @@ class OdometryNode{
       double ticks_rl = msg.position[2];
       double ticks_rr = msg.position[3];
 
-      double w_fl,w_fr,w_rl,w_rr;
+      double w_fl,w_fr,w_rl,w_rr; //angular velocities of the wheels in radians per second
 
       ros::Time current_time = msg.header.stamp;
 
@@ -172,9 +172,9 @@ class OdometryNode{
 
       //create odometry message
       if(integrationMethod==0)
-      msg = euler_odometry(v_wx,v_wy,dt); 
+        msg = euler_odometry(v_wx,v_wy,dt); 
       else if(integrationMethod==1)
-      msg = runge_kutta_odometry(v_wx,v_wy,dt); 
+        msg = runge_kutta_odometry(v_wx,v_wy,dt); 
       
 
       //publish message
