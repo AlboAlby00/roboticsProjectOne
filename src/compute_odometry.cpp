@@ -6,6 +6,9 @@
 #include <nav_msgs/Odometry.h>
 #include <tf2/LinearMath/Quaternion.h>
 #include <cmath>
+#include <dynamic_reconfigure/server.h>
+#include <robotics_project_one/odometryIntegrationConfig.h>
+
 
 bool reset_odometry_callback(double *x,double *y,double *theta, robotics_project_one::Reset_odometry::Request  &req, 
                     robotics_project_one::Reset_odometry::Response &res) {
@@ -18,7 +21,14 @@ bool reset_odometry_callback(double *x,double *y,double *theta, robotics_project
   return true;
 }
 
-//TODO: use the formulas to compute odometry and publish it
+ void odometry_callback(int* integrationMethod, robotics_project_one:: odometryIntegrationConfig &config, uint32_t level) { 
+     ROS_INFO("Reconfigure Request:  %s - Level %d",
+           config.integrationMethod,
+            level);
+       *integrationMethod = config.integrationMethod;
+    }
+
+//TODO: use the formulas to compute odometry and publish it  
 //      broadcast TF from world frame to base frame (?)
 class OdometryNode{
   private:
@@ -36,6 +46,8 @@ class OdometryNode{
 
     bool firstMsg;
 
+    int integrationMethod; 
+
     double previous_ticks_fl;
     double previous_ticks_fr;
     double previous_ticks_rl;
@@ -47,9 +59,14 @@ class OdometryNode{
 
     int seq;
 
+
   public:
     OdometryNode(){
-
+      dynamic_reconfigure::Server<robotics_project_one::odometryIntegrationConfig> dynServer;
+      dynamic_reconfigure::Server<robotics_project_one::odometryIntegrationConfig>::CallbackType f;
+      f = boost::bind(&odometry_callback, &integrationMethod, _1, _2);   // ma questi numeri non ho ben capito cosa sono
+      dynServer.setCallback(f); 
+      
       pub_cmd_vel= n.advertise<geometry_msgs::TwistStamped>("cmd_vel", 1000);
       pub_odom = n.advertise<nav_msgs::Odometry>("odom",1000);
 
@@ -79,7 +96,9 @@ class OdometryNode{
       seq=1;
 
     }
-
+      
+  
+     
     void callback(const sensor_msgs::JointState& msg){
       double ticks_fl = msg.position[0];
       double ticks_fr = msg.position[1];
@@ -99,7 +118,7 @@ class OdometryNode{
 
         generate_cmd_vel(w_fl,w_fr,w_rl,w_rr);
 
-        calculate_odometry(dt);
+        calculate_odometry(dt); // va passato integration?
 
         broadcast_tf();
       }
@@ -145,15 +164,18 @@ class OdometryNode{
       return (curr_ticks-pre_ticks)*2*M_PI/(dt.toSec()*N*T);
     }
 
-    void calculate_odometry(ros::Duration dt){
-      //TODO:choose between euler and runge-kutta with dynamic configuration. For now only euler integration is used 
-      
+    void calculate_odometry(ros::Duration dt){  
       //converting from base to world frame
       double v_wx = v_x*cos(theta) - v_y*sin(theta);
       double v_wy = v_x*sin(theta) + v_y*cos(theta);
+       nav_msgs::Odometry msg;
 
       //create odometry message
-      nav_msgs::Odometry msg = euler_odometry(v_wx,v_wy,dt);
+      if(integrationMethod==0)
+      msg = euler_odometry(v_wx,v_wy,dt); 
+      else if(integrationMethod==1)
+      msg = runge_kutta_odometry(v_wx,v_wy,dt); 
+      
 
       //publish message
       pub_odom.publish(msg);
@@ -223,7 +245,8 @@ int main(int argc, char **argv) {
 
   OdometryNode odometry;
 
-  ros::spin();
+
+   ros::spin();
 
   return 0;
 }

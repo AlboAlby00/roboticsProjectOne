@@ -7,6 +7,7 @@ find_package(catkin REQUIRED COMPONENTS
   rospy
   std_msgs
   message_generation
+  dynamic_reconfigure
 )
 
 add_message_files(
@@ -22,6 +23,11 @@ add_service_files(
 generate_messages(
   DEPENDENCIES
   std_msgs
+)
+
+generate_dynamic_reconfigure_options(
+  cfg/odometryIntegration.cfg
+  
 )
 
 
