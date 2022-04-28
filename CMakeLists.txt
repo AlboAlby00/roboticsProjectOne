@@ -9,6 +9,7 @@ find_package(catkin REQUIRED COMPONENTS
   message_generation
   tf2
   tf2_ros
+  dynamic_reconfigure
 )
 
 add_message_files(
@@ -24,6 +25,11 @@ add_service_files(
 generate_messages(
   DEPENDENCIES
   std_msgs
+)
+
+generate_dynamic_reconfigure_options(
+  cfg/odometryIntegration.cfg
+  
 )
 
 
