@@ -1,6 +1,6 @@
 <launch>
 
-    <node pkg="robotics_project_one" type="odom" name="odometryNode" output="screen" />
+    <node pkg="robotics_project_one" type="compute_odometry" name="odometryNode" output="screen" />
     <node pkg="robotics_project_one" type="compute_control" name="wheelSpeedsNode" output="screen" />
     <node pkg="robotics_project_one" type = "tf2_broad" name = "broadcasterNode" output="screen"/>
 

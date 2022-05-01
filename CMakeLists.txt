@@ -4,7 +4,6 @@ project(robotics_project_one)
 
 find_package(catkin REQUIRED COMPONENTS
   roscpp
-  rospy
   std_msgs
   message_generation
   tf2

@@ -21,13 +21,6 @@ bool reset_odometry_callback(double *x,double *y,double *theta, robotics_project
   return true;
 }
 
- void odometry_callback(int* integrationMethod, robotics_project_one:: odometryIntegrationConfig &config, uint32_t level) { 
-     ROS_INFO("Reconfigure Request:  %s - Level %d",
-           config.integrationMethod,
-            level);
-       *integrationMethod = config.integrationMethod;
-    }
-
 //TODO: use the formulas to compute odometry and publish it  
 //      broadcast TF from world frame to base frame (?)
 class OdometryNode{
@@ -38,6 +31,9 @@ class OdometryNode{
     ros::Publisher pub_odom;
     ros::ServiceServer srv_reset_odometry;
 
+    dynamic_reconfigure::Server<robotics_project_one::odometryIntegrationConfig> dynServer;
+    dynamic_reconfigure::Server<robotics_project_one::odometryIntegrationConfig>::CallbackType f;
+
 
     double r,l_x,l_y,T,N;   //parameters that will be retrieved from the parameter server
 
@@ -46,7 +42,7 @@ class OdometryNode{
 
     bool firstMsg;
 
-    int integrationMethod; 
+    bool integrationMethod; 
 
     double previous_ticks_fl;
     double previous_ticks_fr;
@@ -62,9 +58,7 @@ class OdometryNode{
 
   public:
     OdometryNode(){
-      dynamic_reconfigure::Server<robotics_project_one::odometryIntegrationConfig> dynServer;
-      dynamic_reconfigure::Server<robotics_project_one::odometryIntegrationConfig>::CallbackType f;
-      f = boost::bind(&odometry_callback, &integrationMethod, _1, _2);   // ma questi numeri non ho ben capito cosa sono
+      f = boost::bind(&OdometryNode::odometry_callback, this, _1, _2);
       dynServer.setCallback(f); 
       
       pub_cmd_vel= n.advertise<geometry_msgs::TwistStamped>("cmd_vel", 1000);
@@ -89,15 +83,21 @@ class OdometryNode{
       n.getParam("/x0",x);
       n.getParam("/y0",y);
       n.getParam("/theta0",theta);
-      
 
+      
+      integrationMethod=true;
       firstMsg=true;
 
       seq=1;
 
     }
-      
-  
+
+    void odometry_callback(robotics_project_one:: odometryIntegrationConfig &config, uint32_t level) { 
+     /*ROS_INFO("Reconfigure Request:  %s - Level %b",
+           config.integrationMethod,
+            level);*/
+       integrationMethod = config.integrationMethod;
+    }
      
     void callback(const sensor_msgs::JointState& msg){
       double ticks_fl = msg.position[0];
@@ -168,12 +168,14 @@ class OdometryNode{
       //converting from base to world frame
       double v_wx = v_x*cos(theta) - v_y*sin(theta);
       double v_wy = v_x*sin(theta) + v_y*cos(theta);
-       nav_msgs::Odometry msg;
+      
+      
+      nav_msgs::Odometry msg;
 
       //create odometry message
-      if(integrationMethod==0)
+      if(integrationMethod)
         msg = euler_odometry(v_wx,v_wy,dt); 
-      else if(integrationMethod==1)
+      else
         msg = runge_kutta_odometry(v_wx,v_wy,dt); 
       
 
