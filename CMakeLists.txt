@@ -19,6 +19,7 @@ add_message_files(
 add_service_files(
   FILES
   Reset_odometry.srv
+  Set_compute_control_param.srv
 )
 
 generate_messages(

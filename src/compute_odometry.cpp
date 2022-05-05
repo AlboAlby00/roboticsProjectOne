@@ -8,6 +8,8 @@
 #include <cmath>
 #include <dynamic_reconfigure/server.h>
 #include "robotics_project_one/odometryIntegrationConfig.h"
+#include "ros/service_client.h"
+#include "robotics_project_one/Set_compute_control_param.h"
 
 #define EULER 0
 #define RK 1
@@ -23,6 +25,7 @@ class OdometryNode{
         ros::Subscriber sub_wheel_states;
         ros::Publisher pub_cmd_vel;
         ros::Publisher pub_odom;
+        ros::ServiceClient srv_set_compute_control;
 
         ros::ServiceServer srv_reset_odometry;
 
@@ -64,6 +67,9 @@ class OdometryNode{
             dyn_callback = boost::bind(&OdometryNode::dynamic_reconfigure_callback, this, _1, _2);
             dyn_server.setCallback(dyn_callback);
 
+            //client to set l_x,l_y,T in compute_control node
+            srv_set_compute_control = n.serviceClient<robotics_project_one::Set_compute_control_param>("Set_compute_control_param");
+
             //setup reset service
 
             srv_reset_odometry = n.advertiseService<ResetRequest,ResetResponse>("reset_odometry",boost::bind(&OdometryNode::reset_odometry_callback,this, _1, _2));
@@ -104,6 +110,14 @@ class OdometryNode{
             ROS_INFO("set r to %f", r);
             N = config.N;
             ROS_INFO("set N to %f", N);
+
+            //set param in compute_control node
+            robotics_project_one::Set_compute_control_param param;
+            param.request.l_x=l_x;
+            param.request.l_y=l_y;
+            param.request.T=T;
+            srv_set_compute_control.call(param);
+
         }
 
         bool reset_odometry_callback(ResetRequest& req, ResetResponse& res){

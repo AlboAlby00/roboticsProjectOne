@@ -1,6 +1,10 @@
 #include "ros/ros.h"
 #include <geometry_msgs/TwistStamped.h>
 #include "robotics_project_one/WheelSpeeds.h"
+#include "robotics_project_one/Set_compute_control_param.h"
+
+typedef robotics_project_one::Set_compute_control_param::Request SetRequest;
+typedef robotics_project_one::Set_compute_control_param::Response SetResponse;
 
 class ComputeControl{
     
@@ -8,7 +12,8 @@ class ComputeControl{
         ros::NodeHandle n;
         ros::Subscriber sub_cmd_vel;
         ros::Publisher pub_wheels_rpm;
-        double r,l_x,l_y,T;   //parameters that will be retrieved from the parameter server
+        ros::ServiceServer srv_set_compute_control_param;
+        double r,l_x,l_y,T;   //parameters that will be retrieved from dyna
         int seq;
 
     public:
@@ -17,6 +22,8 @@ class ComputeControl{
             
             pub_wheels_rpm = n.advertise<robotics_project_one::WheelSpeeds>("wheels_rpm",1000);
             sub_cmd_vel = n.subscribe("cmd_vel", 1000, &ComputeControl::callback, this);
+
+            srv_set_compute_control_param = n.advertiseService<SetRequest,SetResponse>("set_compute_control_param",boost::bind(&ComputeControl::set_param,this, _1, _2));
             
             //retrieve fixed robot parameters
             r=0.07;
@@ -50,6 +57,16 @@ class ComputeControl{
             seq++;
 
             pub_wheels_rpm.publish(response);
+        }
+
+        bool set_param(SetRequest& req, SetResponse& res){
+
+            l_x=req.l_x;
+            l_y=req.l_y;
+            T=req.T;
+            ROS_INFO("Set l_x to %f,l_y to %f,T to %f in compute_control node",l_x,l_y,T);
+            return true;
+
         }
 };
 
