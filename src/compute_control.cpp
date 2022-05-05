@@ -12,16 +12,19 @@ class ComputeControl{
         int seq;
 
     public:
+
         ComputeControl(){
             
             pub_wheels_rpm = n.advertise<robotics_project_one::WheelSpeeds>("wheels_rpm",1000);
             sub_cmd_vel = n.subscribe("cmd_vel", 1000, &ComputeControl::callback, this);
             
-            //retrieve robot parameters
-            n.getParam("/r",r);
+            //retrieve fixed robot parameters
+            r=0.07;
             n.getParam("/lx",l_x);
             n.getParam("/ly",l_y);
             n.getParam("/T",T);
+
+            ROS_INFO("set r to %f",r);
 
             //initialize frame_id
             seq = 1;
@@ -48,7 +51,6 @@ class ComputeControl{
 
             pub_wheels_rpm.publish(response);
         }
-
 };
 
 
