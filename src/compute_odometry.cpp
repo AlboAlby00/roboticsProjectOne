@@ -68,7 +68,7 @@ class OdometryNode{
             dyn_server.setCallback(dyn_callback);
 
             //client to set l_x,l_y,T in compute_control node
-            srv_set_compute_control = n.serviceClient<robotics_project_one::Set_compute_control_param>("Set_compute_control_param");
+            srv_set_compute_control = n.serviceClient<robotics_project_one::Set_compute_control_param>("set_compute_control_param");
 
             //setup reset service
 
@@ -113,9 +113,7 @@ class OdometryNode{
 
             //set param in compute_control node
             robotics_project_one::Set_compute_control_param param;
-            param.request.l_x=l_x;
-            param.request.l_y=l_y;
-            param.request.T=T;
+            param.request.R=r;
             srv_set_compute_control.call(param);
 
         }

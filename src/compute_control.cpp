@@ -26,7 +26,7 @@ class ComputeControl{
             srv_set_compute_control_param = n.advertiseService<SetRequest,SetResponse>("set_compute_control_param",boost::bind(&ComputeControl::set_param,this, _1, _2));
             
             //retrieve fixed robot parameters
-            r=0.07;
+           
             n.getParam("/lx",l_x);
             n.getParam("/ly",l_y);
             n.getParam("/T",T);
@@ -61,10 +61,8 @@ class ComputeControl{
 
         bool set_param(SetRequest& req, SetResponse& res){
 
-            l_x=req.l_x;
-            l_y=req.l_y;
-            T=req.T;
-            ROS_INFO("Set l_x to %f,l_y to %f,T to %f in compute_control node",l_x,l_y,T);
+            r = req.R;
+            ROS_INFO("Set r to %f in compute_control node",r);
             return true;
 
         }
