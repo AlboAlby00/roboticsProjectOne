@@ -1,0 +1,95 @@
+### Miriam Di Napoli --- 10720326
+### Matteo Delpini   ----- 10658676
+### Alberto Confente --- 10676663
+#
+
+# Robotics - Project 1
+
+## Brief description of the files
+
+### C++ files
+
+- **compute_odometry.cpp** : defines a node `OdometryNode` that  subscribes to the topic `"wheel_states"` (which contains messages of type `sensor_msgs/JointState` representing encoder-generated values for the four wheels RPM and ticks), computes the chassis linear and angular velocities and uses them to generate the robot's odometry. The calculated angular and linear velocities will be published on the topic `"cmd_vel"` as `geometry_msgs/TwistStamped` messages; the generated odometry will be published on the topic `"odom"` as `nav_msgs/Odometry` messages. The node provides a service `"reset_odometry"`, which allows the user to reset the robot's pose to a given `<x> <y> <theta>` vector. The integration method used to generate the robot's odometry is dynamically reconfigurable, and can change (using different functions in the `OdometryNode` class) between the Euler and the Runge-Kutta methods. The node also allows for the dynamic reconfiguration of robot's parameter `r` and `N`, and this functionality was used to calibrate these two parameters in order to optimize the odometry precision. The file is pretty big, so we've put together related functions and methods of the class into `regions`, hoping they'd make the file more easily readable.
+
+
+- **compute_control.cpp** : defines a node `ComputeControl` that subscribes to the topic `"cmd_vel"` (where the `OdometryNode` publishes the calculated angular and linear velocity), computes every wheel's speed and publishes them on the topic `"wheels_rpm"`. The published speed can be compared with the ones published in the topic `"wheel_states"`. This node also provides a service `"set_compute_control_param"`, used by the `OdometryNode` node to keep the robot wheel radius **r** consistent when a dynamic_reconfigure call is performed by the user on that node.
+
+- **broadcaster_tf2.cpp** : defines a node that subscribes to the `"odom"` topic, computes the tf from the "odom" reference frame to the "base_link" reference frame, and publishes it by using the `sendTransform` function.
+
+- **static_tf_broadcaster.cpp**: defines a node that subscribes to the topic `"robot/pose"` and computes the static tf from "world" to "odom" based on the first message that is published on the topic. This node's functionality was especially useful to determine how much the odometry matched the ground-truth pose as described in the provided bag files.
+
+### MSG files
+
+- **WheelSpeeds.msg**: defines the structure of the custom message (see the *Structure of any custom message* section) used to publish the computed control speeds on the topic `"wheels_rpm"`.
+
+### SRV files
+
+- **Reset_odometry.srv**: defines the input arguments (the new `x,y,theta` vector) and the output results (none) of a call to the `"reset_odometry"` service, advertised by the `OdometryNode` node.
+- **Set_compute_control_param.srv**: defines the input arguments (the new `r` parameter) and the output results (none) of a call to the `"set_compute_control_param"` service, advertised by the `ComputeControl` node.
+
+### CFG files 
+
+- **odometryIntegration.cfg** : defines the parameters that can be changed dynamically by the user, without killing the nodes. In this case there are:
+    1. `integrationMethod`: an Enum with two values (euler and runge-kutta) that specifies the formulas that will be used by `OdometryNode` to calculate the robot's odometry;
+    2. `r`: the robot wheel radius (used for calibration);
+    3. `N`: the robot CPR (used for calibration).
+
+### Launch files
+
+- **launcher.launch**: this file generates the four nodes described in the *C++ files* section and defines all the static parameters that they use.
+
+
+## Name and meaning of the ROS parameters
+
+| Parameter | Description | Described in file | Value|
+|---|---|---|---|
+| `r` |  the robot's wheel radius |  `odometryIntegration.cfg` | 0.0715 m|
+| `lx` |  the robot's wheel position along x |  `launcher.launch` |0.200 m|
+| `ly`  |  the robot's wheel position along y | `launcher.launch`  | 0.169 m|
+| `T`  |  the robot's gear ratio | `launcher.launch`  | 5.0| 
+| `N`  |  the robot's encoders CPR | `odometryIntegration.cfg`  | 39|
+| `x0`  |  the initial position along the axis x | `launcher.launch`  | 0.0 m|
+| `y0`  |  the initial position along the axis y | `launcher.launch`  |0.0 m|
+| `theta0`  |  the initial yaw angle | `launcher.launch`  |0.0 rad|
+| `integrationMethod`  |  the odometry integration method | `odometryIntegration.cfg`  |0 (Euler)|
+
+
+## Structure of the TF tree
+
+The tf tree has the following structure: world -> odom -> base_link
+
+### Static-TF world -> odom 
+This TF is generated once by the `StaticBroadcaster` node, listening to the first message on the topic `"robot/pose"`.
+
+### Dynamic-TF odom -> base_link
+This TF is generated by the `TfBroad` node (defined in the `broadcaster_tf2.cpp` file), by listening to every message on the topic `"odom"`.
+
+
+## Structure of any custom message
+
+This is the structure of the custom message used to publish individual wheel speeds computed by the `ComputeControl` node, as described in the project requirements: 
+
+```
+Header header
+float64 rpm_fl
+float64 rpm_fr
+float64 rpm_rr  
+float64 rpm_rl
+```
+
+This information about the message structure can also be found by typing `rosmsg show robotics_project_one/WheelSpeeds` into the shell.  
+No other custom messages were defined.
+
+## Usage
+
+The nodes can be started all together by typing `roslaunch robotics_project_one launcher.launch` . The node will be listening to their inputs, which can be provided by typing `rosbag play <path_to_bagfile.bag>`, as we've done with the three given bags.
+
+The type of integration can be chosen dinamically with the following commands: 
+`rosrun dynamic_reconfigure dynparam list` to show the list of nodes that can be reconfigured dinamically (in our project this will return `/odometryNode`) and `rosrun dynamic_reconfigure dynparam set /odometryNode <parameter> <value>` (where value is the value we choose) to set the new parameter. 
+
+To call the `reset_odometry` service, provided by `OdometryNode`, simply type `rosservice call reset_odometry <x> <y> <theta>`
+
+
+
+
+
