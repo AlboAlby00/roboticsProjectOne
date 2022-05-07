@@ -1,21 +1,18 @@
 <launch>
 
-    <node pkg="robotics_project_one" type="compute_odometry" name="odometryNode" output="screen" />
-    <node pkg="robotics_project_one" type="compute_control" name="wheelSpeedsNode" output="screen" />
-    <node pkg="robotics_project_one" type = "tf2_broad" name = "broadcasterNode" output="screen"/>
+    <node pkg="robotics_project_one" type = "compute_odometry" name = "odometryNode" output = "screen" />
+    <node pkg="robotics_project_one" type = "compute_control" name = "wheelSpeedsNode" output = "screen" />
+    <node pkg="robotics_project_one" type = "tf2_broad" name = "broadcasterNode" output = "screen"/>
+    <node pkg="robotics_project_one" type = "static_broadcaster" name="staticBroadcasterNode" output = "screen" />
 
-    <param name="r" type="double" value="0.07" />
+    <!-- <param name="r" type="double" value="0.07" /> -->
     <param name="lx" type="double" value="0.2" />
     <param name="ly" type="double" value="0.169" />
     <param name="T" type="double" value="5.0" />
-    <param name="N" type="double" value="42" />
+    <!-- <param name="N" type="double" value="42" /> -->
 
     <param name="x0" type="double" value="0" />
     <param name="y0" type="double" value="0" />
     <param name="theta0" type="double" value="0" />
-
-    <!--Initialized to the initial position of the first bag!-->
-
-    <node pkg="tf2_ros" type="static_transform_publisher" name="static_tf" args="0 0 0 0 0 0 0 world odom " /> 
 
 </launch>

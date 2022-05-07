@@ -1,6 +1,5 @@
 #include "ros/ros.h"
 #include "robotics_project_one/Reset_odometry.h"
-#include "std_msgs/String.h"
 #include <geometry_msgs/TwistStamped.h>
 #include <sensor_msgs/JointState.h>
 #include <nav_msgs/Odometry.h>
@@ -67,7 +66,7 @@ class OdometryNode{
             dyn_callback = boost::bind(&OdometryNode::dynamic_reconfigure_callback, this, _1, _2);
             dyn_server.setCallback(dyn_callback);
 
-            //client to set l_x,l_y,T in compute_control node
+            //client to set r in compute_control node
             srv_set_compute_control = n.serviceClient<robotics_project_one::Set_compute_control_param>("set_compute_control_param");
 
             //setup reset service
@@ -82,18 +81,16 @@ class OdometryNode{
             sub_wheel_states = n.subscribe("wheel_states", 1000, &OdometryNode::wheel_states_callback, this);
 
             //retrieve fixed robot parameters
-            //n.getParam("/r",r);
             n.getParam("/lx",l_x);
             n.getParam("/ly",l_y);
             n.getParam("/T",T);
-            //n.getParam("/N",N);
 
             //retrieve initial position
             n.getParam("/x0",x);
             n.getParam("/y0",y);
             n.getParam("/theta0",theta);
 
-            ROS_INFO("Initialized with r: %f\tlx: %f\tly: %f\tT: %f\tN: %f\tintegration: %d\t",r,l_x,l_y,T,N,integrationMethod); //uncomment block to debug
+            /* ROS_INFO("Initialized with r: %f\tlx: %f\tly: %f\tT: %f\tN: %f\tintegration: %d\t",r,l_x,l_y,T,N,integrationMethod); //uncomment block to debug */
             
             firstMsg=true;
             seq=1;
@@ -111,7 +108,7 @@ class OdometryNode{
             N = config.N;
             ROS_INFO("set N to %f", N);
 
-            //set param in compute_control node
+            //change param also in compute_control node
             robotics_project_one::Set_compute_control_param param;
             param.request.R=r;
             srv_set_compute_control.call(param);
@@ -152,7 +149,6 @@ class OdometryNode{
                 previous_ticks_rl = ticks_rl;
                 previous_ticks_rr = ticks_rr;
                 previous_time = current_time;
-                firstMsg = false;
             }
 
             ros::Duration dt = current_time-previous_time;
@@ -172,6 +168,8 @@ class OdometryNode{
             previous_ticks_rl = ticks_rl;
             previous_ticks_rr = ticks_rr;
             previous_time = current_time;
+            
+            firstMsg = false;
 
             return;
         }
@@ -190,6 +188,13 @@ class OdometryNode{
             w = (-w_fl + w_fr - w_rl + w_rr) * r/(4.0*(l_x+l_y));
 
             /* ROS_INFO("Calculated chassis speed v_x: %f\t v_y: %f\t w: %f",v_x,v_y,w); //uncomment block for debug */
+
+            if(firstMsg){
+                //set radius param in compute_control node
+                robotics_project_one::Set_compute_control_param param;
+                param.request.R=r;
+                srv_set_compute_control.call(param);
+            }
 
             // generate cmd_vel message
             generate_cmd_vel_message();

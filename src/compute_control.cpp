@@ -13,7 +13,7 @@ class ComputeControl{
         ros::Subscriber sub_cmd_vel;
         ros::Publisher pub_wheels_rpm;
         ros::ServiceServer srv_set_compute_control_param;
-        double r,l_x,l_y,T;   //parameters that will be retrieved from dyna
+        double r,l_x,l_y,T;   
         int seq;
 
     public:
@@ -30,8 +30,6 @@ class ComputeControl{
             n.getParam("/lx",l_x);
             n.getParam("/ly",l_y);
             n.getParam("/T",T);
-
-            ROS_INFO("set r to %f",r);
 
             //initialize frame_id
             seq = 1;

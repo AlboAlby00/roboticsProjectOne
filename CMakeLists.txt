@@ -49,4 +49,7 @@ add_executable(tf2_broad src/broadcaster_tf2.cpp)
 add_dependencies(tf2_broad ${catkin_EXPORTED_TARGETS})
 target_link_libraries(tf2_broad ${catkin_LIBRARIES})
 
+add_executable(static_broadcaster src/static_tf_broadcaster.cpp)
+add_dependencies(static_broadcaster ${catkin_EXPORTED_TARGETS})
+target_link_libraries(static_broadcaster ${catkin_LIBRARIES})
 
